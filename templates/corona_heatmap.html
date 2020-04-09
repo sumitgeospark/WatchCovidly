@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-162398499-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-162398499-1');
+</script>
+
+    <title>WatchCovidly</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta charset="utf-8" />
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+
+      /* Optional: Makes the sample page fill the window. */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #description {
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+      }
+
+      #infowindow-content .title {
+        font-weight: bold;
+      }
+
+      #infowindow-content {
+        display: none;
+      }
+
+      #map #infowindow-content {
+        display: inline;
+      }
+
+      .pac-card {
+        margin: 10px 10px 0 0;
+        border-radius: 2px 0 0 2px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        outline: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        background-color: #fff;
+        font-family: Roboto;
+      }
+
+      #pac-container {
+        padding-bottom: 12px;
+        margin-right: 12px;
+      }
+
+      .pac-controls {
+        display: inline-block;
+        padding: 5px 11px;
+      }
+
+      .pac-controls label {
+        font-family: Roboto;
+        font-size: 13px;
+        font-weight: 300;
+      }
+
+      #pac-input {
+        background-color: #fff;
+        font-family: Roboto;
+        font-size: 15px;
+        font-weight: 300;
+        margin-left: 12px;
+        padding: 0 11px 0 13px;
+        text-overflow: ellipsis;
+        width: 400px;
+      }
+
+      #pac-input:focus {
+        border-color: #4d90fe;
+      }
+
+      #title {
+        color: #fff;
+        background-color: #4d90fe;
+        font-size: 25px;
+        font-weight: 500;
+        padding: 6px 12px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="pac-card" id="pac-card">
+      <div>
+        <div id="title">
+          WatchCovidly(Read closely) - Know the sensitive areas where people are put in quarantine by Govt. of Karnataka.
+        </div>
+        <div id="type-selector" class="pac-controls"></div>
+        <div id="strict-bounds-selector" class="pac-controls"></div>
+      </div>
+      <div id="pac-container">
+        <input id="pac-input" type="text" placeholder="Enter a location" />
+      </div>
+    </div>
+    <div id="map"></div>
+    <div id="infowindow-content">
+      <img src="" width="16" height="16" id="place-icon" />
+      <span id="place-name" class="title"></span><br />
+      <span id="place-address"></span>
+    </div>
+
+    <script>
+      // This example requires the Places library. Include the libraries=places
+      // parameter when you first load the API. For example:
+      // <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+
+      function initMap(lat = 12.911807999999999, lng = 77.6360751, data = []) {
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 12,
+          center: { lat, lng }
+        });
+        if (lat != 12.911807999999999) {
+          setMarkers(map, lat, lng);
+        }
+        var heatmap = new google.maps.visualization.HeatmapLayer({
+          data
+        });
+
+        heatmap.setMap(map);
+
+        // var card = document.getElementById('pac-card');
+        // var input = document.getElementById('pac-input');
+        // var types = document.getElementById('type-selector');
+        // var strictBounds = document.getElementById('strict-bounds-selector');
+
+        // Create the search box and link it to the UI element.
+        var input = document.getElementById("pac-input");
+        var searchBox = new google.maps.places.SearchBox(input);
+        // map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+
+        // Bias the SearchBox results towards current map's viewport.
+        // map.addListener('bounds_changed', function() {
+        //   searchBox.setBounds(map.getBounds());
+        // });
+
+        var markers = [];
+        // Listen for the event fired when the user selects a prediction and retrieve
+        // more details for that place.
+        searchBox.addListener("places_changed", function() {
+          var places = searchBox.getPlaces();
+          // console.log(places);
+
+          // console.log(places[0].geometry.location);
+
+          const lat = places[0].geometry.location.lat();
+          const lng = places[0].geometry.location.lng();
+
+          getDataSearch(lat, lng);
+        });
+      }
+
+      async function getDataSearch(lat, lng) {
+        const lat_lng = await fetchData(lat, lng);
+        initMap(lat, lng, lat_lng);
+      }
+      
+
+      async function fetchData(lat, lng) {
+        var URL = `https://corona-cases-info.herokuapp.com/api/nearby-quarantined/?lat=${lat}&lng=${lng}&radius=2000`;
+
+        // console.log(URL);
+        const fetchResult = await fetch(URL);
+        const response = await fetchResult;
+        const jsonData = await response.json();
+        // console.log("jsonData", jsonData);
+        var lat_lng = [];
+        array = jsonData["nearby_users"];
+        // console.log("array", array);
+        array.forEach(function(item, index) {
+          // console.log(item, index);
+          lat_lng.push(new google.maps.LatLng(item[0], item[1]));
+        });
+
+        return lat_lng;
+      }
+
+      async function getPoints(lat, lng) {
+        let position = {};
+
+        position = navigator.geolocation.getCurrentPosition(async function(
+          position
+        ) {
+          position = position;
+          la = position.coords.latitude;
+          ln = position.coords.longitude;
+          const lat_lng = await fetchData(
+            position.coords.latitude,
+            position.coords.longitude
+          );
+          initMap(la, ln, lat_lng);
+        });
+      }
+
+      getPoints();
+
+      function setMarkers(map, lat, lng) {
+        var image = {
+          url: "https://maps.google.com/mapfiles/kml/shapes/library_maps.png",
+          size: new google.maps.Size(32, 32)
+        };
+        var shape = {
+          coords: [1, 1, 1, 20, 18, 20, 18, 1],
+          type: "poly"
+        };
+
+        new google.maps.Marker({
+          position: { lat, lng },
+          map: map,
+          // icon: image,
+          shape: shape
+          // title: beach[0],
+          // zIndex: beach[3]
+        });
+
+        // if (data.length) {
+        //   for (var i = 0; i < data.length; i++) {
+        //     var loc = data[i];
+        //     // console.log(data[i])
+        //     console.log(loc[0]);
+        //     var marker = new google.maps.Marker({
+        //       position: { lat: loc[0], lng: loc[1] },
+        //       map: map,
+        //       icon: image,
+        //       shape: shape
+        //       // title: beach[0],
+        //       // zIndex: beach[3]
+        //     });
+        // }
+        // }
+      }
+    </script>
+{{API_KEY}}
+    
+    <script
+      async
+      defer
+      src="https://maps.googleapis.com/maps/api/js?key={{API_KEY}}&libraries=visualization,places&callback=initMap"
+    ></script>
+    <div>
+      Built by Team Codeprenuers(<a
+        target="_blank"
+        href="https://www.linkedin.com/in/nitin-tiwari-094b3816b/"
+        >Nitin Tiwari</a
+      >
+      &
+      <a target="_blank" href="https://www.linkedin.com/in/sumit12dec/"
+        >Sumit Raj)</a
+      >
+    </div>
+  </body>
+</html>
