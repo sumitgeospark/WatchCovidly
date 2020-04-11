@@ -20,5 +20,12 @@ Track the home quarantine people in 500 meter radius from the given location.
   * Convert *Bengaluru.xlsx* to json and save in the different file as in *bangaluru_quarantined.json* file.
   * Run the script inside the *save_data.py* file.
   * All the json data will be formatted and will be saved in the given collection.
-  * Run the server and search the location in search bar to see the quarantine people around that location by
+  * Run the server.    
+     
+  ```
+  $ python manage.py runserver
+  ```
+  * Open web browser and goto `127.0.0.1:8000`.
+  * Search the location to see the quarantine people around that location, by
     default heatmap will show the data based on current location of the user. 
+
