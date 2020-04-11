@@ -25,7 +25,7 @@ Track the home quarantine people in 500 meter radius from the given location.
   ```
   $ python manage.py runserver
   ```
-  * Open web browser and goto `127.0.0.1:8000`.
+  * Open web browser and goto http://127.0.0.1:8000.
   * Search the location to see the quarantine people around that location, by
     default heatmap will show the data based on current location of the user. 
 
